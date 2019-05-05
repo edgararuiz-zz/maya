@@ -27,11 +27,11 @@ variable indicates if the year is under year 1.
 It expects 5 integer numbers representing each of the day cycles in the long count
 calendar. The lowest count is kin, which is equivalent to a day. 20 days, or kins
 is a winal. 18 winals is a tun. 20 tuns is a katun. 20 katuns is a baktun.  This means
-that a baktun represents a cycle of 144,000 days.
+that a baktun represents a cycle of 144,000 days (https://en.wikipedia.org/wiki/Maya_calendar).
 }
 \details{
-The count starts at what has been determined to be the equivalent of mayan long count
-date 0.0.0.0.0.  In the proleptic Gregorian calendar that is August 11 3114 BCE.
+The count begins from what has been determined to be the equivalent of mayan long count
+date 0.0.0.0.0.  The equivalent in the Gregorian calendar is August 11 3114 BCE.
 }
 \examples{
 

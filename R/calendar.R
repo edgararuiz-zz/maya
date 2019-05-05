@@ -84,6 +84,26 @@ date_as_number <- function(year, month, day, bce) {
   ifelse(bce, -x, x)
 }
 
+#' Number of days between two gregorian dates
+#'
+#' It determines the number of days between two gregorian dates.  It works 
+#' independently from any R date/time function. An advantage of this function 
+#' is that it is accepts dates older than year 1 CE.  It uses calendar and 
+#' not astronomical year numbering. 
+#'
+#' @param year_1 A positive integer
+#' @param month_1 A positive integer
+#' @param day_1 A positive integer
+#' @param bce_1 Logical variable, indicates if the date is Before Common Era
+#' @param year_2 A positive integer
+#' @param month_2 A positive integer
+#' @param day_2 A positive integer
+#' @param bce_2 Logical variable, indicates if the date is Before Common Era
+#' 
+#' @examples
+#'
+#' diff_days(3114, 8, 11, TRUE, 2012, 12, 21, FALSE)
+#' 
 #' @export
 diff_days <- function(year_1, month_1, day_1, bce_1,
                       year_2, month_2, day_2, bce_2) {
@@ -131,6 +151,33 @@ diff_days <- function(year_1, month_1, day_1, bce_1,
   td
 }
 
+#' Converts a gregorian date to mayan long count date
+#'
+#' It converts a gregorian calendar date into mayan long count date. It expects
+#' 4 arguments: year number, month number, day number, and if the date is Before 
+#' Common Era (BCE). It expects a calendar year not as an astronomical year.  
+#' Dates before year 1, have to be passed by setting bce to TRUE.
+#'  
+#' It returns a vector with 5 named values. The lowest count is kin, which is equivalent 
+#' to a day. 20 days, or kins is a winal. 18 winals is a tun. 20 tuns is a katun. 
+#' 20 katuns is a baktun.  This means that a baktun represents a cycle of 144,000 days 
+#' (https://en.wikipedia.org/wiki/Maya_calendar).
+#' 
+#' The count begins from what has been determined to be the equivalent of mayan long count
+#' date 0.0.0.0.0.  The equivalent in the Gregorian calendar is August 11 3114 BCE.
+#'
+#' @param year A positive integer
+#' @param month A positive integer
+#' @param day A positive integer
+#' @param bce Logical variable, indicates if the date is Before Common Era
+#'
+#' @examples
+#'
+#' # August 11 3114 BCE
+#' gregorian_to_mayan(3114, 8, 11, TRUE)
+#' # May 19 143 CE
+#' gregorian_to_mayan(143, 5, 19, FALSE)
+#' 
 #' @export
 gregorian_to_mayan <- function(year, month, day, bce) {
   pl <- period_factors()
@@ -145,6 +192,29 @@ gregorian_to_mayan <- function(year, month, day, bce) {
   d
 }
 
+#' Adds a number of days to a date
+#'
+#' It adds a number of days to the passed date, and returns a new date. It
+#' performs the calculations independently from any R date/time function.
+#' An advantage of this function is that it is accepts dates older than year 
+#' 1 CE.  It uses calendar and not astronomical year numbering.  It only
+#' adds days, passing a negative no_days returns an error.
+#'
+#' @param year A positive integer
+#' @param month A positive integer
+#' @param day A positive integer
+#' @param bce Logical variable, indicates if the date is Before Common Era
+#' @param no_days A positive integer. The number of days to count from the
+#' date passed
+#'
+#' @examples
+#'
+#' add_days(3114, 8, 11, TRUE, 1872000)
+#' 
+#' # These should return the same date
+#' as.Date("2000-03-03") + 1000
+#' add_days(2000, 3, 3, FALSE, 1000)
+#' 
 #' @export
 add_days <- function(year, month, day, bce, no_days) {
   if (no_days < 0) stop("Only positive values are allowed for no_days")
@@ -220,8 +290,8 @@ add_days <- function(year, month, day, bce, no_days) {
 #' is a winal. 18 winals is a tun. 20 tuns is a katun. 20 katuns is a baktun.  This means
 #' that a baktun represents a cycle of 144,000 days (https://en.wikipedia.org/wiki/Maya_calendar).
 #' 
-#' The count starts at what has been determined to be the equivalent of mayan long count
-#' date 0.0.0.0.0.  In the proleptic Gregorian calendar that is August 11 3114 BCE.
+#' The count begins from what has been determined to be the equivalent of mayan long count
+#' date 0.0.0.0.0.  The equivalent in the Gregorian calendar is August 11 3114 BCE.
 #'
 #' @param baktun The number of 144,000 day cycles 
 #' @param katun The number of 7,200 day cycles
