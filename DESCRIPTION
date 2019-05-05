@@ -1,14 +1,13 @@
 Package: maya
-Title: What the Package Does (One Line, Title Case)
+Title: Converts between Mayan and Gregorian calendars
 Version: 0.0.0.9000
 Authors@R: 
-    person(given = "First",
-           family = "Last",
+    person(given = "Edgar",
+           family = "Ruiz",
            role = c("aut", "cre"),
-           email = "first.last@example.com",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
-License: What license it uses
+           email = "edgararuiz@gmail.com")
+Description: Provides functions to convert between the Mayan calendar dates and Gregorian dates.
+License: MIT License + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1
