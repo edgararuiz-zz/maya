@@ -8,32 +8,52 @@ period_factors <- function() {
   )
 }
 
+#' Determines if it is a leap year
+#'
+#' It follows the established rules to figure out if is a leap year 
+#' (https://en.wikipedia.org/wiki/Leap_year).  It uses astronomial
+#' year numbering for years before the Gregorian calendar was established.  
+#' (https://en.wikipedia.org/wiki/Astronomical_year_numbering)
+#' 
+#' The year is designated as leap if: the year number is divisible by 400,
+#' or if the year number is divisible by 4, but it is not divisible by
+#' 100.
+#'
+#' @param year The year to evaluate. It expects a integer number. It
+#' also expects the astronomical number of years older than 1. For example,
+#' to evaluate year 401 BCE, use -400.
+#'
+#' @examples
+#'
+#'is_leap_year(2012)
+#'is_leap_year(-401)
+#'# To evaluate multiple years
+#'as.integer(lapply(2000:2005, is_leap_year))
+#'
 #' @export
-is_leap <- function(yr) {
-  is_leap <- FALSE
-  div_400 <- yr / 400 == floor(yr / 400) # Leap year
-  div_100 <- yr / 100 == floor(yr / 100) # Not leap year
-  div_4 <- yr / 4 == floor(yr / 4) # Leap year
-  if (div_400) is_leap <- TRUE
-  if (div_100 && !div_400) is_leap <- FALSE
-  if (div_4 && !div_100) is_leap <- TRUE
-  if (yr == 0) is_leap <- FALSE
-  is_leap
+is_leap_year <- function(year) {
+  is_leap_year <- FALSE
+  div_400 <- year / 400 == floor(year / 400) # Leap year
+  div_100 <- year / 100 == floor(year / 100) # Not leap year
+  div_4 <- year / 4 == floor(year / 4) # Leap year
+  if (div_400) is_leap_year <- TRUE
+  if (div_100 && !div_400) is_leap_year <- FALSE
+  if (div_4 && !div_100) is_leap_year <- TRUE
+  if (year == 0) is_leap_year <- FALSE
+  is_leap_year
 }
 
 days_to_eoy <- function(year, month, day) {
-  month_days <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
-  roy <- month_days
-  roy[2] <- roy[2] + is_leap(year)
+  roy <-  c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+  roy[2] <- roy[2] + is_leap_year(year)
   roy <- roy[month:12]
   roy[1] <- roy[1] - day
   sum(roy)
 }
 
 days_to_boy <- function(year, month, day) {
-  month_days <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
-  roy <- month_days
-  roy[2] <- roy[2] + is_leap(year)
+  roy <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+  roy[2] <- roy[2] + is_leap_year(year)
   roy <- roy[1:month]
   roy[month] <- day
   sum(roy)
@@ -42,7 +62,7 @@ days_to_boy <- function(year, month, day) {
 days_in_year <- function(year, month, day, month1, day1) {
   month_days <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
   roy <- month_days
-  roy[2] <- roy[2] + is_leap(year)
+  roy[2] <- roy[2] + is_leap_year(year)
   if (month != month1) {
     roy <- roy[month:month1]
     roy[month] <- roy[month] - day
@@ -103,7 +123,7 @@ diff_days <- function(year_1, month_1, day_1, bce_1,
   }
   if (add_bulk) {
     in_between <- (year_2 + adj_2):(year_1 + adj_1)
-    leap_years <- sum(as.integer(lapply(in_between, is_leap)))
+    leap_years <- sum(as.integer(lapply(in_between, is_leap_year)))
     bulk_days <- (length(in_between) * 365) + leap_years
   }
   td <- from + bulk_days + to
@@ -136,7 +156,7 @@ add_days <- function(year, month, day, bce, no_days) {
     no_days <- no_days - dte
     for (i in seq_len(total_cycles)) {
       yr <- year + i
-      year_days <- 365 + is_leap(yr)
+      year_days <- 365 + is_leap_year(yr)
       if (no_days >= year_days) {
         no_days <- no_days - year_days
       } else {
@@ -144,7 +164,7 @@ add_days <- function(year, month, day, bce, no_days) {
       }
     }
     full_years <- year + i
-    if (is_leap(yr)) month_days[[2]] <- 29
+    if (is_leap_year(yr)) month_days[[2]] <- 29
     for (i in seq_along(month_days)) {
       nd <- no_days - month_days[i]
       if (nd >= 0) {
@@ -187,6 +207,33 @@ add_days <- function(year, month, day, bce, no_days) {
   d
 }
 
+#' Converts mayan long count date to gregorian date
+#'
+#' It converts a long count mayan calendar entry into a gregorian calendar date. It 
+#' returns a single vector with 4 values: year number, month number, day number, 
+#' and if the date is Before Common Era (BCE). The year is returned as a calendar year,
+#' not as an astronomical year.  The year number will always be positive, the logical BCE 
+#' variable indicates if the year is under year 1.
+#'  
+#' It expects 5 integer numbers representing each of the day cycles in the long count
+#' calendar. The lowest count is kin, which is equivalent to a day. 20 days, or kins
+#' is a winal. 18 winals is a tun. 20 tuns is a katun. 20 katuns is a baktun.  This means
+#' that a baktun represents a cycle of 144,000 days (https://en.wikipedia.org/wiki/Maya_calendar).
+#' 
+#' The count starts at what has been determined to be the equivalent of mayan long count
+#' date 0.0.0.0.0.  In the proleptic Gregorian calendar that is August 11 3114 BCE.
+#'
+#' @param baktun The number of 144,000 day cycles 
+#' @param katun The number of 7,200 day cycles
+#' @param tun The number of 360 day cycles
+#' @param winal The number of 20 day cycles
+#' @param kin The number of days
+#'
+#' @examples
+#'
+#' mayan_to_gregorian(0, 0, 0, 0, 0)
+#' mayan_to_gregorian(13, 0, 0, 0, 0)
+#' 
 #' @export
 mayan_to_gregorian <- function(baktun, katun, tun, winal, kin) {
   pl <- period_factors()
