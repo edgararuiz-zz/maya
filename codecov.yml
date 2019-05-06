@@ -7,5 +7,3 @@ coverage:
         target: 90%
         threshold: null
     patch: off
-codecov:
-  token: 64b2668f-a811-4621-9e16-55f5c12f31b0
