@@ -300,6 +300,16 @@ mayan_to_gregorian2 <- function(baktun, katun, tun, winal, kin) {
   add_days(3114, 8, 11, TRUE, total_days)
 }
 
+#' Converts mayan long count date to gregorian date
+#'
+#' @param date Character vector 
+#' @param output Expected output
+#' 
+#' @examples
+#'
+#' mayan_to_gregorian("0.0.0.0.0")
+#' mayan_to_gregorian("13.0.0.0.0")
+#' 
 #' @export
 mayan_to_gregorian <- function(date = NULL, 
                                output = c("calendar", "named_vector", "astronomical", "number")) {
@@ -322,6 +332,17 @@ mayan_to_gregorian <- function(date = NULL,
   m
 }
 
+#' Converts a gregorian date to mayan long count date
+#'
+#' @param date A character vector
+#' @param input A character vector
+#' @param output A character vector
+#'
+#' @examples
+#'
+#' gregorian_to_mayan("August 11, 3114 BCE")
+#' gregorian_to_mayan("May 19, 143, CE")
+#' 
 #' @export
 gregorian_to_mayan <-  function(date = NULL, 
                                 input = c("calendar", "named_vector"),
