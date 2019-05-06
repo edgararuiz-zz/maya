@@ -39,7 +39,7 @@ is_leap_year <- function(year) {
   if (div_400) is_leap_year <- TRUE
   if (div_100 && !div_400) is_leap_year <- FALSE
   if (div_4 && !div_100) is_leap_year <- TRUE
-  if (year == 0) is_leap_year <- FALSE
+  if (year == 0) is_leap_year <- TRUE
   is_leap_year
 }
 
@@ -131,7 +131,7 @@ diff_days <- function(year_1, month_1, day_1, bce_1,
     to <- days_to_boy(year_2, month_2, day_2)
     adj_1 <- 1
   }
-  if (bce_1 != bce_2) from <- from + 1
+  #if (bce_1 != bce_2) from <- from + 1
 
   adj_year_1 <- year_1 + adj_1
   adj_year_2 <- year_2 + adj_2
@@ -174,12 +174,12 @@ diff_days <- function(year_1, month_1, day_1, bce_1,
 #' @examples
 #'
 #' # August 11 3114 BCE
-#' gregorian_to_mayan(3114, 8, 11, TRUE)
+#' gregorian_to_mayan2(3114, 8, 11, TRUE)
 #' # May 19 143 CE
-#' gregorian_to_mayan(143, 5, 19, FALSE)
+#' gregorian_to_mayan2(143, 5, 19, FALSE)
 #' 
 #' @export
-gregorian_to_mayan <- function(year, month, day, bce) {
+gregorian_to_mayan2 <- function(year, month, day, bce) {
   pl <- period_factors()
   from_origin <- diff_days(3114, 8, 11, TRUE, year, month, day, bce)
   baktun <- floor((from_origin / pl$baktun))
@@ -218,61 +218,50 @@ gregorian_to_mayan <- function(year, month, day, bce) {
 #' @export
 add_days <- function(year, month, day, bce, no_days) {
   if (no_days < 0) stop("Only positive values are allowed for no_days")
+  
+  adj_year <- ifelse(bce, -(year -1), year)
+  
   month_days <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
-  total_cycles <- ceiling(no_days / 365) * 2
-  if (bce) year <- -(year - 1)
-  dte <- days_to_eoy(year, month, day)
-  if (no_days > dte) {
-    no_days <- no_days - dte
-    for (i in seq_len(total_cycles)) {
-      yr <- year + i
-      year_days <- 365 + is_leap_year(yr)
-      if (no_days >= year_days) {
-        no_days <- no_days - year_days
-      } else {
-        break()
-      }
-    }
-    full_years <- year + i
-    if (is_leap_year(yr)) month_days[[2]] <- 29
-    for (i in seq_along(month_days)) {
-      nd <- no_days - month_days[i]
-      if (nd >= 0) {
-        no_days <- nd
-      } else {
-        break()
-      }
-    }
-    full_months <- i
-    full_days <- no_days
+  
+  rmd <- month_days
+  rmd[2] <- rmd[2] + is_leap_year(adj_year)
+  rmd <- rmd[month:12]
+  rmd[1] <- rmd[1] - day 
+  rmd_agg <- as.integer(lapply(seq_along(rmd), function(x) sum(rmd[1:x])))
+  rmd_over <- sum(rmd_agg < no_days)
+  
+  if(rmd_over == 0) {
+    full_days <- no_days + day
+    full_months <- month 
+    full_year <- year
+    is_bce <- bce
   } else {
-    yr <- year
-    full_years <- year
-    sel <- month_days[month:12]
-    sel[1] <- sel[1] - day
-    for (i in seq_along(sel)) {
-      if (sel[i] >= no_days) {
-        full_months <- month + i - 1
-        if (full_months == month) {
-          full_days <- day + no_days
-        } else {
-          full_days <- no_days
-        }
-        break()
-      } else {
-        no_days <- no_days - sel[i]
-      }
+    if(rmd_over < length(rmd_agg)) {
+      rmd_full <- rmd_agg[rmd_over]
+      full_days <- no_days - rmd_full
+      full_months <- month + rmd_over
+      full_year <- year
+      is_bce <- bce
+    } else {
+      days_left <- no_days - rmd_agg[length(rmd_agg)]
+      cycles <- ceiling(days_left / 365)
+      yr_cycles <- seq_len(cycles) + adj_year
+      ydays <- as.integer(lapply(yr_cycles, function(x) 365 + is_leap_year(x)))
+      ydays_agg <- as.integer(lapply(seq_along(ydays), function(x) sum(ydays[1:x])))
+      ydays_over <- sum(ydays_agg < days_left)
+      curr_year <- adj_year + ydays_over + 1
+      rmd <- month_days
+      rmd[2] <- rmd[2] + is_leap_year(curr_year)
+      rmd_agg <- as.integer(lapply(seq_along(rmd), function(x) sum(rmd[1:x])))
+      curr_days <- days_left - ifelse(ydays_over > 0, ydays_agg[ydays_over], 0) 
+      rmd_over <- sum(rmd_agg < curr_days)
+      full_months <- rmd_over + 1
+      full_days <- curr_days - ifelse(rmd_over > 0, rmd_agg[rmd_over],0)
+      full_year <- ifelse(curr_year <= 0, -(curr_year - 1), curr_year)
+      is_bce <- ifelse(curr_year <= 0, TRUE, FALSE)
     }
   }
-  is_bce <- FALSE
-  if (full_years < 0) {
-    ({
-      full_years <- full_years - 1
-      is_bce <- TRUE
-    })
-  }
-  if (full_years > 0 && bce) full_days <- full_days - 1
-  d <- c(abs(full_years), full_months, full_days, is_bce)
+  d <- c(abs(full_year), full_months, full_days, is_bce)
   names(d) <- c("year", "month", "day", "is_bce")
   d
 }
@@ -301,12 +290,62 @@ add_days <- function(year, month, day, bce, no_days) {
 #'
 #' @examples
 #'
-#' mayan_to_gregorian(0, 0, 0, 0, 0)
-#' mayan_to_gregorian(13, 0, 0, 0, 0)
+#' mayan_to_gregorian2(0, 0, 0, 0, 0)
+#' mayan_to_gregorian2(13, 0, 0, 0, 0)
 #' 
 #' @export
-mayan_to_gregorian <- function(baktun, katun, tun, winal, kin) {
+mayan_to_gregorian2 <- function(baktun, katun, tun, winal, kin) {
   pl <- period_factors()
   total_days <- (baktun * pl$baktun) + (katun * pl$katun) + (tun * pl$tun) + (winal * pl$winal) + (kin * pl$kin)
   add_days(3114, 8, 11, TRUE, total_days)
 }
+
+#' @export
+mayan_to_gregorian <- function(date = NULL, 
+                               output = c("calendar", "named_vector", "astronomical", "number")) {
+  if(!is.character(date)) stop("Expects the date as a character")
+  if(!(output[[1]] %in% c("named_vector", "calendar", "astronomical", "number"))) 
+    stop(paste0(output, " not a valid output option"))
+  sp <- strsplit(date, "\\.")
+  sp <- lapply(sp, as.integer)
+  sp <- sp[[1]]
+  if(length(sp) != 5) stop("Function needs exactly five long count numbers")
+  m <- mayan_to_gregorian2(sp[1], sp[2], sp[3],sp[4], sp[5])
+  if(output[[1]] == "named_vector") 
+    return(m)
+  if(output[[1]] == "calendar") 
+    m <- paste0(month.name[m[2]], " ",  m[[3]], ", ", m[[1]], ifelse(m[[4]], " BCE", " CE"))
+  if(output[[1]] == "astronomical") 
+    m <- paste0(ifelse(m[[4]], paste0("-", m[[1]] - 1), m[[1]]), "/", m[[2]], "/", m[[3]])
+  if(output[[1]] == "number") 
+    m <- as.integer(date_as_number(m[1], m[2], m[3], m[4]))
+  m
+}
+
+#' @export
+gregorian_to_mayan <-  function(date = NULL, 
+                                input = c("calendar", "named_vector"),
+                                output = c("character", "named_vector")) { 
+  if(!(input[[1]] %in% c("named_vector", "calendar")))
+    stop(paste0(input, " not a valid input option"))
+  if(!(output[[1]] %in%  c("character", "named_vector")))
+    stop(paste0(output, " not a valid output option"))
+  
+  if(input[[1]] == "named_vector") {
+    m <- gregorian_to_mayan2(date[[1]], date[[2]], date[[3]], date[[4]])
+  }
+  if(input[[1]] == "calendar") {
+    d <- paste0(strsplit(date, ",")[[1]], collapse = "")
+    d <- strsplit(d, " ")[[1]]
+    d_month <- which(month.name == d[1])
+    d_bce <- ifelse(d[4] == "BCE", TRUE, FALSE)
+    m <- gregorian_to_mayan2(
+      as.integer(d[3]), 
+      as.integer(d_month), 
+      as.integer(d[2]), 
+      d_bce)
+  }
+  if(output[[1]] == "named_vector") return(m)
+  if(output[[1]] == "character") return(paste0(m, collapse = "."))
+}
+

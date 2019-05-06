@@ -3,5 +3,7 @@
 export(add_days)
 export(diff_days)
 export(gregorian_to_mayan)
+export(gregorian_to_mayan2)
 export(is_leap_year)
 export(mayan_to_gregorian)
+export(mayan_to_gregorian2)
