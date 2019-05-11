@@ -33,39 +33,8 @@ is_leap_year <- function(year) {
   is_leap_year
 }
 
-
-
-days_to_eoy <- function(year, month, day) {
-  roy <-  c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
-  roy[2] <- roy[2] + is_leap_year(year)
-  roy <- roy[month:12]
-  roy[1] <- roy[1] - day
-  sum(roy)
-}
-
-days_to_boy <- function(year, month, day) {
-  roy <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
-  roy[2] <- roy[2] + is_leap_year(year)
-  roy <- roy[1:month]
-  roy[month] <- day
-  sum(roy)
-}
-
-days_in_year <- function(year, month, day, month1, day1) {
-  month_days <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
-  roy <- month_days
-  roy[2] <- roy[2] + is_leap_year(year)
-  if (month != month1) {
-    roy <- roy[month:month1]
-    roy[month] <- roy[month] - day
-    roy[month1] <- day1
-    sum(roy)
-  } else {
-    day1 - day
-  }
-}
-
 date_as_number <- function(year, month, day, bce) {
+  if(bce) year <- year - 1
   year <- as.character(year)
   month <- as.character(month)
   day <- as.character(day)
@@ -99,48 +68,46 @@ date_as_number <- function(year, month, day, bce) {
 #' @export
 diff_days <- function(year_1, month_1, day_1, bce_1,
                       year_2, month_2, day_2, bce_2) {
-  number_date1 <- date_as_number(year_1, month_1, day_1, bce_1)
-  number_date2 <- date_as_number(year_2, month_2, day_2, bce_2)
+  nd1 <- date_as_number(year_1, month_1, day_1, bce_1)
+  nd2 <- date_as_number(year_2, month_2, day_2, bce_2)
   
-  one_is_recent <- number_date1 > number_date2
+  if(nd1 > nd2) stop("Date 1 needs to be older than date 2")
   
-  if (bce_1) year_1 <- -(year_1 - 1)
-  if (bce_2) year_2 <- -(year_2 - 1)
+  if(bce_1) year_1 <- -(year_1 - 1)
+  if(bce_2) year_2 <- -(year_2 - 1)
   
-  if (year_1 == year_2) {
-    return(days_in_year(
-      year_1, month_1, day_1, month_2, day_2
-    ))
-  }
-  adj_1 <- -1
-  adj_2 <- -1
-  if (one_is_recent) {
-    from <- days_to_eoy(year_2, month_2, day_2)
-    to <- days_to_boy(year_1, month_1, day_1)
-    adj_2 <- 1
+  month_days <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+  
+  if(year_1 == year_2) {
+    if(month_1 == month_2) {
+      day_2 - day_1
+    } else {
+      md <- month_days
+      if(is_leap_year(year_1)) month_days[[2]] + 1
+      md <- md[month_1:month_2]
+      md[[1]] <- md[[1]] - day_1
+      md[length(md)] <- day_2
+      sum(md)
+    }
   } else {
-    from <- days_to_eoy(year_1, month_1, day_1)
-    to <- days_to_boy(year_2, month_2, day_2)
-    adj_1 <- 1
+    yrs <- as.integer(lapply(year_1:year_2, is_leap_year))
+    yrs <- 365 + yrs
+    
+    md <- month_days
+    md[[1]] <- md[[1]] + is_leap_year(year_1)
+    md <- md[month_1:12]
+    md[[1]] <- md[[1]] - day_1
+    yrs[[1]] <- sum(md)
+    
+    md <- month_days
+    md[[2]] <- md[[2]] + is_leap_year(year_2)
+    md <- md[1:month_2]
+    md[[length(md)]] <- day_2
+    yrs[[length(yrs)]] <- sum(md)
+    
+    sum(yrs)
+    
   }
-  #if (bce_1 != bce_2) from <- from + 1
-  
-  adj_year_1 <- year_1 + adj_1
-  adj_year_2 <- year_2 + adj_2
-  bulk_days <- 0
-  if (one_is_recent) {
-    add_bulk <- adj_year_2 < adj_year_1
-  } else {
-    add_bulk <- adj_year_2 > adj_year_1
-  }
-  if (add_bulk) {
-    in_between <- (year_2 + adj_2):(year_1 + adj_1)
-    leap_years <- sum(as.integer(lapply(in_between, is_leap_year)))
-    bulk_days <- (length(in_between) * 365) + leap_years
-  }
-  td <- from + bulk_days + to
-  if (one_is_recent) td <- (-td)
-  td
 }
 
 #' Adds a number of days to a date
