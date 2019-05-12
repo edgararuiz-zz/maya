@@ -10,13 +10,20 @@ gregorian_date <- function(year_no, month_no, day_no, bce) {
   if(day_no > 31) stop("Day entry not valid. Valid numbers are between 1 and 31")
   # -------------------------------------------------
   dn <- day_name(year_no, month_no, day_no, bce)
+  astro <- paste0(
+    ifelse(bce, "-", ""), 
+    ifelse(bce, year_no - 1, year_no), "-" ,
+    ifelse(nchar(month_no) == 1, "0", ""), month_no, "-", 
+    ifelse(nchar(day_no) == 1, "0", ""), day_no
+    )
   structure(
     list(
       year = year_no,
       month = month_no,
       day = day_no,
       bce = bce,
-      day_name = dn
+      day_name = dn,
+      astronomical = astro
     ),
     class = "gregorian_date"
   )
@@ -46,7 +53,8 @@ as_gregorian_date.Date <- function(x) {
   bce <- FALSE
   if(yr < 0) {
     yr <- abs(yr) + 1
-    bce <- TRUE}
+    bce <- TRUE
+    }
   mn <- as.integer(format(x, "%m"))
   dy <- as.integer(format(x, "%d"))
   gregorian_date(yr, mn, dy, bce)

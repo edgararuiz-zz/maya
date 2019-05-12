@@ -23,12 +23,9 @@ diff_days <- function(from_date, to_date) UseMethod("diff_days")
 
 #' @export
 diff_days.Date <- function(from_date, to_date) {
-  d1 <- date_split(from_date)
-  d2 <- date_split(to_date)
-  diff_days2(
-    d1$year, d1$month, d1$day, d1$bce,
-    d2$year, d2$month, d2$day, d2$bce
-  )
+  d1 <- as_gregorian_date(from_date)
+  d2 <- as_gregorian_date(to_date)
+  diff_days(d1, d2)
 }
 
 #' @export
