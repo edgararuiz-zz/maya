@@ -1,13 +1,3 @@
-period_factors <- function() {
-  list(
-    baktun = 144000,
-    katun = 7200,
-    tun = 360,
-    winal = 20,
-    kin = 1
-  )
-}
-
 #' Converts mayan long count date to gregorian date
 #'
 #' It converts a long count mayan calendar entry into a gregorian calendar date. It 
@@ -72,58 +62,6 @@ mayan_to_gregorian <- function(date = NULL,
   if(output[[1]] == "number") 
     m <- as.integer(date_as_number(m[1], m[2], m[3], m[4]))
   m
-}
-
-tzolkin_names <- function(){
-  c("Imix", "Ikʼ", "Akʼbʼal", "Kʼan", "Chikchan", "Kimi", "Manikʼ", 
-    "Lamat", "Muluk", "Ok", "Chuwen", "Ebʼ", "Bʼen", "Ix", "Men", 
-    "Kibʼ", "Kabʼan", "Etzʼnabʼ", "Kawak", "Ajaw")
-}
-
-haab_names <- function() {
-  c("Pop", "Woʼ", "Sip", "Sotzʼ", "Sek", "Xul", "Yaxkʼin", 
-    "Mol", "Chʼen", "Yax", "Sak", "Keh", "Mak", "Kʼank'in", 
-    "Muwan", "Pax", "Kʼayab", "Kumkʼu", "Wayebʼ")
-}
-
-day_to_haab <- function(day_number) {
-  mayan_month <- ifelse(day_number > 5, floor(day_number / 20), 0)
-  mayan_day <- day_number -(mayan_month * 20)
-  h <- c(
-    as.integer(mayan_month + 1), 
-    as.integer(mayan_day + 1)
-  )
-  names(h) <- c( "month", "day")
-  h
-}
-
-haab_from_base <- function(no_days) {
-  d <- day_rotation(no_days, 365, 347)
-  haab <-day_to_haab(d)
-  h <- c(haab[[1]], haab[[2]])
-  names(h) <- c("month", "day")
-  h
-}
-
-tzolkin_round <- function() {
-  data.frame(
-    day_no = 1:260,
-    day = rep(1:13, 20),
-    named_day = rep(1:20, 13),
-    day_name = tzolkin_names()[rep(1:20, 13)]
-  ) 
-}
-
-day_to_tzolkin <- function(day_number) {
-  t <- tzolkin_round()[day_number, ]
-  d <- c(t$named_day, t$day)  
-  names(d) <- c("named_day", "day")
-  d
-}
-
-tzolkin_from_base <- function(no_days) {
-  d <- day_rotation(no_days, 260, 160)
-  day_to_tzolkin(d)
 }
 
 #' @export
