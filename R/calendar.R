@@ -74,95 +74,6 @@ mayan_to_gregorian <- function(date = NULL,
   m
 }
 
-#' Converts a gregorian date to mayan long count date
-#'
-#' It converts a gregorian calendar date into mayan long count date. It expects
-#' 4 arguments: year number, month number, day number, and if the date is Before 
-#' Common Era (BCE). It expects a calendar year not as an astronomical year.  
-#' Dates before year 1, have to be passed by setting bce to TRUE.
-#'  
-#' It returns a vector with 5 named values. The lowest count is kin, which is equivalent 
-#' to a day. 20 days, or kins is a winal. 18 winals is a tun. 20 tuns is a katun. 
-#' 20 katuns is a baktun.  This means that a baktun represents a cycle of 144,000 days 
-#' (https://en.wikipedia.org/wiki/Maya_calendar).
-#' 
-#' The count begins from what has been determined to be the equivalent of mayan long count
-#' date 0.0.0.0.0.  The equivalent in the Gregorian calendar is August 11 3114 BCE.
-#'
-#' @param year A positive integer
-#' @param month A positive integer
-#' @param day A positive integer
-#' @param bce Logical variable, indicates if the date is Before Common Era
-#'
-#' @examples
-#'
-#' # August 11 3114 BCE
-#' gregorian_to_mayan2(3114, 8, 11, TRUE)
-#' # May 19 143 CE
-#' gregorian_to_mayan2(143, 5, 19, FALSE)
-#' 
-#' @export
-gregorian_to_mayan2 <- function(year, month, day, bce) {
-  pl <- period_factors()
-  from_origin <- diff_days(3114, 8, 11, TRUE, year, month, day, bce)
-  baktun <- floor((from_origin / pl$baktun))
-  katun <- floor((from_origin - (baktun * pl$baktun)) / pl$katun)
-  tun <- floor((from_origin - (baktun * pl$baktun) - (katun * pl$katun)) / pl$tun)
-  winal <- floor((from_origin - (baktun * pl$baktun) - (katun * pl$katun) - (tun * pl$tun)) / pl$winal)
-  kin <- floor((from_origin - (baktun * pl$baktun) - (katun * pl$katun) - (tun * pl$tun) - (winal * pl$winal)))
-  
-  haab <- haab_from_base(from_origin)
-  h <- haab_names()
-  haab[[3]] <- h[haab[[1]]]
-  
-  tzolkin <- tzolkin_from_base(from_origin)
-  t <- tzolkin_names()
-  tzolkin[[3]] <- t[tzolkin[[1]]]
-  
-  d <- c(baktun, katun, tun, winal, kin, haab)
-  names(d) <- c("baktun", "katun", "tun", "winal", "kin", "haab_month", "haab_day", "haab_name")
-  d
-}
-
-#' Converts a gregorian date to mayan long count date
-#'
-#' @param date A character vector
-#' @param input A character vector
-#' @param output A character vector
-#'
-#' @examples
-#'
-#' gregorian_to_mayan("August 11, 3114 BCE")
-#' gregorian_to_mayan("May 19, 143, CE")
-#' 
-#' @export
-gregorian_to_mayan <-  function(date = NULL, 
-                                input = c("calendar", "named_vector"),
-                                output = c("character", "named_vector")) { 
-  if(!(input[[1]] %in% c("named_vector", "calendar")))
-    stop(paste0(input, " not a valid input option"))
-  if(!(output[[1]] %in%  c("character", "named_vector")))
-    stop(paste0(output, " not a valid output option"))
-  
-  if(input[[1]] == "named_vector") {
-    m <- gregorian_to_mayan2(date[[1]], date[[2]], date[[3]], date[[4]])
-  }
-  if(input[[1]] == "calendar") {
-    d <- paste0(strsplit(date, ",")[[1]], collapse = "")
-    d <- strsplit(d, " ")[[1]]
-    d_month <- which(month.name == d[1])
-    d_bce <- ifelse(d[4] == "BCE", TRUE, FALSE)
-    m <- gregorian_to_mayan2(
-      as.integer(d[3]), 
-      as.integer(d_month), 
-      as.integer(d[2]), 
-      d_bce)
-  }
-  if(output[[1]] == "named_vector") return(m)
-  if(output[[1]] == "character") return(paste0(m, collapse = "."))
-}
-
-
 tzolkin_names <- function(){
   c("Imix", "Ikʼ", "Akʼbʼal", "Kʼan", "Chikchan", "Kimi", "Manikʼ", 
     "Lamat", "Muluk", "Ok", "Chuwen", "Ebʼ", "Bʼen", "Ix", "Men", 
@@ -214,3 +125,38 @@ tzolkin_from_base <- function(no_days) {
   d <- day_rotation(no_days, 260, 160)
   day_to_tzolkin(d)
 }
+
+#' @export
+gregorian_to_mayan <- function(x) UseMethod("gregorian_to_mayan")
+
+#' @export
+gregorian_to_mayan.gregorian_date <- function(x) {
+  pl <- period_factors()
+  from_origin <- diff_days(3114, 8, 11, TRUE, x$year, x$month, x$day, x$bce)
+  baktun <- floor((from_origin / pl$baktun))
+  katun <- floor((from_origin - (baktun * pl$baktun)) / pl$katun)
+  tun <- floor((from_origin - (baktun * pl$baktun) - (katun * pl$katun)) / pl$tun)
+  winal <- floor((from_origin - (baktun * pl$baktun) - (katun * pl$katun) - (tun * pl$tun)) / pl$winal)
+  kin <- floor((from_origin - (baktun * pl$baktun) - (katun * pl$katun) - (tun * pl$tun) - (winal * pl$winal)))
+  
+  haab <- haab_from_base(from_origin)
+  h <- haab_names()
+  haab[[3]] <- h[haab[[1]]]
+  
+  tzolkin <- tzolkin_from_base(from_origin)
+  t <- tzolkin_names()
+  tzolkin[[3]] <- t[tzolkin[[1]]]
+  
+  d <- c(baktun, katun, tun, winal, kin, haab)
+  names(d) <- c("baktun", "katun", "tun", "winal", "kin", "haab_month", "haab_day", "haab_name")
+  d
+}
+
+#' @export
+gregorian_to_mayan.Date <- function(x) {
+ x <- as_gregorian_date(x) 
+ gregorian_to_mayan(x)
+}
+
+
+

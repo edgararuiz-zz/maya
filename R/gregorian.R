@@ -47,5 +47,4 @@ as_gregorian_date.Date <- function(x) {
   mn <- as.integer(format(x, "%m"))
   dy <- as.integer(format(x, "%d"))
   gregorian_date(yr, mn, dy, bce)
-  
 }
