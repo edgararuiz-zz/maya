@@ -7,17 +7,21 @@ mayan_date <- function(baktun, katun, tun, winal, kin) {
   if(!all(ai)) stop("All entries must be a positive number")
   # -------------------------------------------------
   lg <- long_count_days(baktun, katun, tun, winal, kin)
-  haab <- haab_from_base(lg)
+  long_count <-   list(
+    baktun = baktun,
+    katun = katun,
+    tun = tun,
+    winal = winal,
+    kin = kin
+    )
   tzolkin <- tzolkin_from_base(lg)
+  haab <- haab_from_base(lg)
   structure(
     list(
-      baktun = baktun,
-      katun = katun,
-      tun = tun,
-      winal = winal,
-      kin = kin,
+      long_count = long_count,
       tzolkin = tzolkin,
-      haab = haab
+      haab = haab,
+      from_origin = lg
     ),
     class = "mayan_date"
   )
@@ -28,16 +32,17 @@ setOldClass("mayan_date")
 #' @export
 print.mayan_date <- function(x, ...) {
   ld <- paste0(
-    x$baktun, " ", "baktun", ifelse(x$baktun > 1, "s ", " "), 
-    x$katun, " ", "katun", ifelse(x$katun > 1, "s ", ""), 
-    x$tun, " ", "tun", ifelse(x$tun > 1, "s ", " "), 
-    x$winal, " ", "winal", ifelse(x$winal > 1, "s ", " "), 
-    x$kin, " ", "kin", ifelse(x$kin > 1, "s ", " ") 
+    x$long_count$baktun, " ", "baktun", ifelse(x$long_count$baktun > 1, "s ", " "), 
+    x$long_count$katun, " ", "katun", ifelse(x$long_count$katun > 1, "s ", " "), 
+    x$long_count$tun, " ", "tun", ifelse(x$long_count$tun > 1, "s ", " "), 
+    x$long_count$winal, " ", "winal", ifelse(x$long_count$winal > 1, "s ", " "), 
+    x$long_count$kin, " ", "kin", ifelse(x$long_count$kin > 1, "s ", " ") 
     )
   haab <-  paste(x$haab$day, x$haab$month_name)
   tzolkin <- paste(x$tzolkin$day_1, x$tzolkin$day_2_name)
+  lg <- paste0("No. days: ", prettyNum(x$from_origin, big.mark = ","))
   cat(
-    paste(ld, tzolkin, haab, sep = " | ")
+    paste(ld, tzolkin, haab, lg, sep = " | ")
   )
   invisible(x)
 }
