@@ -1,7 +1,3 @@
-is_integer <- function(number) {
-  floor(number) == number
-}
-
 #' @export
 gregorian_date <- function(year_no, month_no, day_no, bce) {
   # ------------------- Validations ----------------
@@ -13,12 +9,14 @@ gregorian_date <- function(year_no, month_no, day_no, bce) {
   if(month_no > 12) stop("Month entry not valid. Valid numbers are between 1 and 12")
   if(day_no > 31) stop("Day entry not valid. Valid numbers are between 1 and 31")
   # -------------------------------------------------
+  dn <- day_name(year_no, month_no, day_no, bce)
   structure(
     list(
       year = year_no,
       month = month_no,
       day = day_no,
-      bce = bce
+      bce = bce,
+      day_name = dn
     ),
     class = "gregorian_date"
   )
@@ -29,7 +27,12 @@ setOldClass("gregorian_date")
 #' @export
 print.gregorian_date <- function(x, ...) {
   cat(
-    paste0(month.name[x$month], " ", x$day, ", ", x$year," ", ifelse(x$bce, "BCE", "CE"))
+    paste0(
+      x$day_name$name, " ", 
+      month.name[x$month], " ", 
+      x$day, ", ", 
+      x$year," ", 
+      ifelse(x$bce, "BCE", "CE"))
     )
   invisible(x)
 }

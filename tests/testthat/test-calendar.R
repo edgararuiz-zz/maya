@@ -24,7 +24,8 @@ test_that("Special add_days cases", {
   expect_error(add_days(2000, 1, 1, FALSE, -1000))
 })
 test_that("Special diff_day cases", {
-  expect_error(diff_days(2014, 2, 5, FALSE, 2000, 2, 4, FALSE))
+  expect_equal(diff_days(2014, 2, 5, FALSE, 2000, 2, 4, FALSE), -5114)
+  expect_equal(diff_days(2012, 12,21,0, 3114,8,11,1), -1872000)
   expect_equal(diff_days(2014, 2, 5, FALSE, 2014, 3, 4, FALSE), 27)
 })
 
